@@ -79,6 +79,76 @@
       ```
    
       为了查看并发的效果，可以多跑几次。可以观察到每次输出的顺序都是不一样的
+
+### 案例2 -  Channel
+
+这个案例主要学习Channel的作用以及尝试使用有缓冲的Channel
+
+1. 建立新的文件夹 `2-1-2channel` (文件夹命名不要用空格)
+
+2. 创建新的文件 `channelWithBuf.go`
+
+3. 然后往`channelWithBuf.go`文件写入代码
+
+   1. 先写个基本框架
+
+      ```go
+      package main
+      
+      func main() {
+      	CalSquare()
+      }
+      ```
+      
+   2. 定义函数`CalSquare`，阅读代码顺序参见注释的编号
+
+      ```go
+      func CalSquare() {
+          // 1-创建一个无缓冲的channel: src，创建一个有缓冲的channel: dest
+          src := make(chan int)
+          dest := make(chan int, 3)
+          
+          // 2-创建一个立即执行的匿名routine，依次往src管道里面放入数字 0~9，并在最后关闭src管道
+          go func() {
+              defer close(src)
+              for i := 0; i < 10; i++ {
+                  src <- i
+              }
+          }()
+          
+          // 3-创建一个立即执行的匿名routine，接收src管道的数字，计算其平方放入dest管道中，并在最后关闭dest管道
+          go func() {
+              defer close(dest)
+              for i := range src {
+                  dest <- i * i
+              }
+          }()
+          
+          // 4-接收dest管道的数字并打印出来
+          for i := range dest {
+              fmt.Println(i)
+          }
+      }
+      ```
+
+   3. 保存文件时自动导入相关的包，最终的代码见 [src/2-1-2channel/channelWithBuf.go](../src/2-1-2channel/channelWithBuf.go)
+
+   4. 执行`go run channelWithBuf.go`查看效果，大致如下：
+
+      ```powershell
+      (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-2channel> go run .\channelWithBuf.go
+      0
+      1
+      4
+      9
+      16
+      25
+      36
+      49
+      64
+      81
+      ```
+      
    
    
 
