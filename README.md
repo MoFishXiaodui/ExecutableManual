@@ -1,1 +1,1 @@
-"# ExecutableManual¿ÉÖ´ĞĞÊÖ²á" 
+# ExecutableManual å¯æ‰§è¡Œæ‰‹å†Œ
