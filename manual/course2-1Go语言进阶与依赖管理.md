@@ -152,3 +152,87 @@
    
    
 
+### 案例3-并发安全Lock
+
+这个案例主要学习使用 sync.Mutex 锁让并发变得安全
+
+1. 建新文件夹`2-1-3mutex`
+
+2. 创建文件`mutex.go`
+
+3. 在`mutex.go`文件中写入：
+
+   1. 基本框架
+
+      ```go
+      package main
+      
+      func main() {
+      	
+      }
+      ```
+
+   2. 定义全局变量x和全局锁lock
+
+      ```go
+      var x int64
+      var lock sync.Mutex
+      ```
+
+   3. 定义一个带锁操作x 和 一个不带锁操作x 的函数`addWithLock`和`addWithoutLock`
+
+      ```go
+      func addWithLock() {
+      	for i := 0; i < 2000; i++ {
+      		lock.Lock()
+      		x += 1
+      		lock.Unlock()
+      	}
+      }
+      
+      func addWithoutLock() {
+      	for i := 0; i < 2000; i++ {
+      		x += 1
+      	}
+      }
+      ```
+
+   4. 在main函数中并发五个goroutine去调用无锁的函数，等待1秒输出x的值。然后把x清零，再并发五个goroutine去调用有锁的函数，等待1秒输出x的值
+
+      ```go
+      func main() {
+      	x = 0
+      	for i := 0; i < 5; i++ {
+      		go addWithoutLock()
+      	}
+      	time.Sleep(time.Second)
+      	println("withoutLock: ", x)
+      
+      	x = 0
+      	for i := 0; i < 5; i++ {
+      		go addWithLock()
+      	}
+      	time.Sleep(time.Second)
+      	println("withLock: ", x)
+      }
+      ```
+
+      
+
+4. 保存文件，自动导入`sync`和`time`包。最终代码[src/2-1-3mutex/mutex.go](../src/2-1-3mutex/mutex.go)
+
+5. 多次运行`go run mutex.go`，查看效果。（有锁的能准确输出10000，无锁的就会有差错）
+
+   ```go
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-3mutex> go run .\mutex.go
+   withoutLock:  8475
+   withLock:  10000
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-3mutex> go run .\mutex.go
+   withoutLock:  8519
+   withLock:  10000
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-3mutex> go run .\mutex.go
+   withoutLock:  8359
+   withLock:  10000
+   ```
+
+   
