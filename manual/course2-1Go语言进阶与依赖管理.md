@@ -223,7 +223,7 @@
 
 5. 多次运行`go run mutex.go`，查看效果。（有锁的能准确输出10000，无锁的就会有差错）
 
-   ```go
+   ```powershell
    (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-3mutex> go run .\mutex.go
    withoutLock:  8475
    withLock:  10000
@@ -233,6 +233,67 @@
    (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-3mutex> go run .\mutex.go
    withoutLock:  8359
    withLock:  10000
+   ```
+
+
+
+### 案例4 - WaitGroup
+
+在[案例1](###案例1 - 快速打印)中，我们并发打印数字，是通过main中的time.Sleep()函数给予充足时间等待并发完全执行，这是一种不太理想的做法，我们在实际情况中通常无法评估需要多长时间进行等待合适。通过等待管道可以解决这个问题。在此案例，我们这里通过`sync`包下的`WaitGroup`结构更优雅地处理。
+
+- sync.WaitGroup
+  - Add(delta int) - 计数器 +delta
+  - Done() - 计数器 -1
+  - Wait() - 阻塞直到计数器为 0
+
+1. 新文件夹 `2-1-4waitGroup`，新文件`waitGroup.go`
+
+2. 在`waitGroup`中：
+
+   1. 基本框架
+
+   2. 直接在main中写：
+
+      ```go
+      func main() {
+      	// 新建一个WaitGroup结构
+      	wg := sync.WaitGroup{}
+      
+      	// 计数器 + 5
+      	wg.Add(5)
+      
+      	// 并发快速打印 0-5
+      	for i := 0; i < 5; i++ {
+      		go func(num int) {
+      			// 延迟计数器 -1
+      			defer wg.Done()
+      			println(num)
+      		}(i)
+      	}
+      
+      	// 阻塞等待计数器清零
+      	wg.Wait()
+      }
+      ```
+
+3. 保存自动导包`sync`，最终代码见[src/2-1-4waitGroup/waitGroup.go](../src/2-1-4waitGroup/waitGroup.go)
+
+4. 直接运行
+
+   ```powershell
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-3mutex> go run .\mutex.go
+   withoutLock:  8519
+   4
+   2
+   3
+   0
+   1
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-4waitGroup> go run .\waitGroup.go
+   4
+   2
+   3
+   1
+   0
    ```
 
    
