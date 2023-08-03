@@ -297,3 +297,127 @@
    ```
 
    
+
+## 02 依赖管理
+
+- 背景
+- Go依赖管理演进
+- Go Module实践
+
+GoPath -> GoVendor -> GoModule
+
+Go Module
+
+- 通过go.mod文件管理依赖包版本
+- 通过go get / go mod 指令工具管理依赖包
+
+终极目标：定义版本规则和管理项目的依赖关系
+
+依赖管理三要素
+
+- 配置文件，描述依赖 - go.mod
+- 中心仓库管理依赖库 - proxy
+- 本地工具 - go get / mod
+
+依赖配置-version
+
+- 语义化版本
+  - `${Major}.${Minor}.${Patch}`
+  - Major版本不同会被认为是不同的模块
+  - Minor版本通常是新增函数或功能，向后兼容
+  - Patch版本一般是修复bug
+- 基于commit伪版本
+  - `vX.0.0-时间戳yyyymmddhhmmss-哈希前缀12位abcdefgh1234`
+
+### 案例5 - 后面补充
+
+
+
+## 03 测试
+
+- 单元测试
+
+  - 规则
+
+    - 所有测试文件以 `_test.go` 结尾
+
+    - 测试函数的签名：`func TestXxx(*testing.T)`
+
+    - 初始化逻辑放到TestMain中 
+
+      ```go
+      func TestMain(m *testing.M) {
+      	// 测试前：装载数据、配置初始化等前置工作
+          code := m.Run()
+          // 测试后：释放资源等收尾工作
+      }
+      ```
+
+- Mock测试
+
+- 基准测试
+
+### 案例6 - 单元测试
+
+1. 新建文件夹`2-1-6unitTest`，在内新建文件`helloTom.go`和`helloTom_test.go`
+
+2. 在`helloTom.go`中书写以下代码
+
+   ```go
+   package __1_6unitTest
+   
+   func HelloTom() string {
+   	return "Jerry"
+   	//return "Tom"
+   }
+   ```
+
+3. 在`helloTom_test.go`中书写以下代码
+
+   ```go
+   package __1_6unitTest
+   
+   import (
+   	"testing"
+   )
+   
+   func TestHelloTom(t *testing.T) {
+   	// T is a type passed to Test functions to manage test state and support formatted test logs.
+   	output := HelloTom()
+   	expectOutput := "Tom"
+   
+   	if output != expectOutput {
+   		t.Errorf("Expected %s do not match actual %s", expectOutput, output)
+   	}
+   }
+   
+   //func TestMain(m *testing.M) {
+   // M is a type passed to a TestMain function to run the actual tests.
+   //	code := m.Run()
+   //	os.Exit(code)
+   //}
+   ```
+
+4. 最终代码内容见 [src/2-1-6unitTest/](../src/2-1-6unitTest/)
+
+5. 在终端中执行 `go test helloTom.go helloTom_test.go`，查看效果
+
+   ```shell
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-6unitTest> go test helloTom_test.go helloTom.go    
+   --- FAIL: TestHelloTom (0.00s)
+       helloTom_test.go:13: Expected Tom do not match actual Jerry
+   FAIL
+   FAIL    command-line-arguments  0.184s
+   FAIL
+   
+   # 把HelloTom()的返回值改为Tom后测试
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-6unitTest> go test helloTom_test.go helloTom.go
+   ok      command-line-arguments  0.180s
+   ```
+
+   
+
+
+
+
+
