@@ -417,14 +417,15 @@ Go Module
 
    
 
-   ### 案例7 - 单元测试assert
+
+### 案例7 - 单元测试assert
 
    此次案例采用外部库`github.com/stretchr/testify/assert`来测试。
 
    1. 复制[上一个案例](###案例6 - 单元测试)的`2-1-6unitTest`文件夹，更名为`2-1-7assertTest`
-
+   
    2. 可以把两个文件的package都指定为main（就是代码的第一行）
-
+   
    3. 在`2-1-7assertTest目录下`，执行命令`go mod int assertTest` 和 `go get "github.com/stretchr/testify/assert"`
    
       ```shell
@@ -439,9 +440,9 @@ Go Module
       go: added github.com/stretchr/testify v1.8.4
       go: added gopkg.in/yaml.v3 v3.0.1 
       ```
-
+   
    4. 然后你可以看到新建的 `go.mod`和`go.sum`文件记录了模块和依赖信息
-
+   
    5. 修改`helloTom_test.go`的代码，先在import导入新的包
    
       ```go
@@ -450,7 +451,7 @@ Go Module
       	"github.com/stretchr/testify/assert"
       )
       ```
-
+   
    6. 把下面手动比较的代码换成assert的Equal函数
    
       ```go
@@ -462,9 +463,9 @@ Go Module
       // 替换为
       assert.Equal(t, expectOutput, output)
       ```
-
+   
    7. 最终代码见[src/2-1-7assertTest/](../src/2-1-7assertTest/)
-8. 
+
    8. 和[案例6](###案例6 - 单元测试)一样执行测试命令，查看效果如下
    
       ```shell
@@ -493,7 +494,10 @@ Go Module
       FAIL
       ```
       
-      
+
+
+
+### 案例8 - 单元测试 覆盖率
 
 
 
