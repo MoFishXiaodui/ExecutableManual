@@ -499,6 +499,162 @@ Go Module
 
 ### 案例8 - 单元测试 覆盖率
 
+如果想知道测试代码所测代码覆盖的范围，可以在 test 命令后面加一个参数 `--cover`
+
+在测试新案例的代码之前，可以先在[案例6]()或者[案例7]()的代码上面测试。
+
+```shell
+# HelloTom 返回 Tom
+(base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-6unitTest> go test .\helloTom.go .\helloTom_test.go --cover
+ok      command-line-arguments  0.194s  coverage: 100.0% of statements
+
+# HelloTom 返回 Jerry
+(base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-7assertTest> go test .\helloTom.go .\helloTom_test.go --cover
+--- FAIL: TestHelloTom (0.00s)
+    helloTom_test.go:13:
+                Error Trace:    D:/code/MoFishXiaodui/ExecutableManual/src/2-1-7assertTest/helloTom_test.go:13
+                Error:          Not equal:
+                                expected: "Tom"
+                                actual  : "Jerry"
+
+                                Diff:
+                                --- Expected
+                                +++ Actual
+                                @@ -1 +1 @@
+                                -Tom
+                                +Jerry
+                Test:           TestHelloTom
+FAIL
+        command-line-arguments  coverage: 100.0% of statements
+FAIL    command-line-arguments  0.214s
+FAIL
+```
+
+可以看到两次输出都有一行`coverage`标识，标识测试的覆盖率
+
+为了体验并非100%覆盖率的情况我们使用案例代码
+
+1. 新建文件夹`2-1-8coverage`，在内新建文件夹`coverage`，再在内新建文件`judge.go`和`judge_test.go`
+
+2. 在`2-1-8coverage`目录下执行 
+
+   1. go mod init coverage
+   2. go get "github.com/stretchr/testify/assert"
+
+3. 在`judge.go`中书写以下代码
+
+   ```go
+   package coverage
+   
+   func Judge(n int) bool {
+   	if n >= 60 {
+   		return true
+   	}
+   
+   	// 观察通过率时加一些只增加行数，不改变逻辑的代码
+   	// n += 10
+   	// n -= 10
+   
+   	return false
+   }
+   ```
+
+4. 在 `judge_test.go`中书写以下代码
+
+   ```go
+   package coverage
+   
+   import (
+   	"github.com/stretchr/testify/assert"
+   	"testing"
+   )
+   
+   func TestJudge(t *testing.T) {
+   	score1 := Judge(66)
+   	assert.Equal(t, true, score1)
+   
+   	// score2 := Judge(40)
+   	// assert.Equal(t, false, score2)
+   }
+   ```
+
+5. 最终代码见[src/2-1-8coverage/](../src/2-1-8coverage/)
+
+6. 在`2-1-8coverage`目录下执行 `go test .\coverage\ --cover` 测试
+
+   ```shell
+   # 单独66分的情况
+   (base) PS \2-1-8coverage> go test .\coverage --cover 
+   ok      coverage/coverage       (cached)        coverage: 66.7% of statements
+   
+   # 66分和40分一起测的情况
+   (base) PS \2-1-8coverage> go test .\coverage --cover 
+   ok      coverage/coverage       0.212s  coverage: 100.0% of statements
+   
+   # 单独40分的情况
+   (base) PS \2-1-8coverage> go test .\coverage\ --cover
+   ok      coverage/coverage       0.224s  coverage: 66.7% of statements
+   ```
+
+7. 然后可以把Judge函数里面的冗余代码解除注释重复上面的测试
+
+   ```shell
+   # 单独66分的情况
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-8coverage> go test .\coverage\ --cover
+   ok      coverage/coverage       0.216s  coverage: 40.0% of statements
+   
+   # 66分和40分一起测的情况
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-8coverage> go test .\coverage\ --cover
+   ok      coverage/coverage       0.223s  coverage: 100.0% of statements
+   
+   # 单独40分的情况
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-1-8coverage> go test .\coverage\ --cover
+   ok      coverage/coverage       0.227s  coverage: 80.0% of statements
+   ```
+   
+
+
+
+### 案例9 -  单元测试 多个测试函数
+
+1. 把[案例8](#案例8---单元测试-覆盖率)中的 `2-1-8coverage` 文件夹在同级复制一份，命名为 `2-1-9coverage-more`
+2. 到`judge_test.go`把原来的一个测试函数拆分成两个
+
+   ```go
+   // 原来
+   func TestJudge(t *testing.T) {
+   	// score1 := Judge(66)
+   	// assert.Equal(t, true, score1)
+   
+   	score2 := Judge(40)
+   	assert.Equal(t, false, score2)
+   }
+   
+   // 现在
+   func TestJudgeTrue(t *testing.T) {
+   	score1 := Judge(66)
+   	assert.Equal(t, true, score1)
+   }
+   
+   func TestJudgeFail(t *testing.T) {
+   	score2 := Judge(40)
+   	assert.Equal(t, false, score2)
+   }
+   ```
+3. 最终代码见[src/2-1-9coverage-more/](../src/2-1-9coverage-more/)
+4. 和 [案例8](#案例8---单元测试-覆盖率) 的命令一样进行测试
+
+   ```shell
+   (base) 【...】\src\2-1-9coverage-more> go test .\coverage\ --cover
+   ok      coverage/coverage       0.205s  coverage: 100.0% of statements
+   ```
+
+
+
+
+
+
+
 
 
 
