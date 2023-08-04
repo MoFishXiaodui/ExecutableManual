@@ -296,6 +296,73 @@ mock
 
 
 
+## 04 实践
+
+### 案例14 - 克隆老师的社区话题页面案例进行测试
+
+因为这是一个完整的仓库，且此次案例不需要我们写代码，所以这里只放链接，就不把仓库代码放到这里了。
+
+[Moonlight-Zhao/go-project-example at V0 (github.com)](https://github.com/Moonlight-Zhao/go-project-example/tree/V0)
+
+注意，我们**只用分支 V0** 上面的代码，主分支的代码需要用到数据库，不方便初学者测试。大家主要克隆代码时只克隆V0上的代码就行。
+
+你可以克隆主分支后再切到V0分支，然后拉取V0分支。
+
+也可以直接只克隆V0分支
+
+#### 附上GPT的解答：
+
+问：git clone 如何只克隆特定分支？
+
+ChatGPT：
+
+要克隆一个特定分支而不是整个仓库，可以使用Git的`-b`选项来指定要克隆的分支。以下是在`git clone`命令中使用`-b`选项的示例：
+
+```bash
+git clone -b branch_name repository_url
+```
+
+其中：
+
+- `branch_name`是你要克隆的特定分支的名称。
+- `repository_url`是你要克隆的远程仓库的URL。
+
+例如，如果你想克隆一个名为`development`的特定分支，仓库的URL为`https://github.com/example/repo.git`，你可以执行以下命令：
+
+```bash
+git clone -b development https://github.com/example/repo.git
+```
+
+这将只克隆`development`分支的内容到你的本地目录中，而不会包含其他分支和提交历史。
+
+#### 开始实操
+
+1. 找一个合适的位置，执行 `git clone -b V0 git@github.com:Moonlight-Zhao/go-project-example.git `
+
+2. 然后在项目根目录上执行`go run server.go`
+
+3. 当看到终端输出`[GIN-debug] Listening and serving HTTP on :8080`时，即为启动成功。
+
+4. 先去浏览器查看`localhost:8080`，可以看到404，这是因为代码没有配置根路由的处理函数，默认404了。
+
+5. 为了找到有用的路由，我们可以到`server.go`中查看gin的路由处理函数
+
+   ```go
+   r.GET("/community/page/get/:id", func(c *gin.Context) {
+       topicId := c.Param("id")
+       data := cotroller.QueryPageInfo(topicId)
+       c.JSON(200, data)
+   })
+   ```
+
+6. 从上面的代码中，可以看到gin引擎r可以处理路径为 `/community/page/get/:id`的GET请求。于是尝试在浏览器访问：[localhost:8080/community/page/get/1](http://localhost:8080/community/page/get/1)，既可以看到响应数据，然后请自行把id换成2和3等进行测试。
+
+7. 这些数据来源于根目录data文件夹下的topic文件。请尝试修改以及增加数据。
+
+8. 当你修改了文件夹的数据后，刷新浏览器并不能直接看到新数据，需要你关掉服务再执行命令`go run server.go`开启服务
+
+
+
 
 
 
