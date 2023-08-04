@@ -154,6 +154,148 @@ mock
 
 
 
+### 案例12 - 基准测试
+
+1. 新建文件夹 `2-2-12bench` ，在内新建文件 `server.go` 和  `server_test.go`
+
+2. 初始化，在 `2-2-12bench` 目录下执行 `go mod init server`
+
+3. 在 `server.go`中写入代码
+
+   ```go
+   package bench
+   
+   import "math/rand"
+   
+   var ServerIndex [10]int
+   
+   // 初始化服务函数，（其实就是往数组里面各个项写入特定数字，i+100本身应该没什么含义）
+   func InitServerIndex() {
+   	for i := 0; i < 10; i++ {
+   		ServerIndex[i] = i + 100
+   	}
+   }
+   
+   func Select() int {
+   	// 随意选择一个服务器（随机选择一个数组元素，模拟随机一个服务器返回数字）
+   	return ServerIndex[rand.Intn(10)]
+   }
+   ```
+
+4. 在  `server_test.go` 中写入代码
+
+   ```go
+   package bench
+   
+   import "testing"
+   
+   func BenchmarkSelect(b *testing.B) {
+   	InitServerIndex()
+   	b.ResetTimer()
+   
+   	for i := 0; i < b.N; i++ {
+   		Select()
+   	}
+   }
+   
+   // parallel 平行的，同时发生的
+   func BenchmarkSelectParallel(b *testing.B) {
+   	InitServerIndex()
+   	b.ResetTimer()
+   	b.RunParallel(func(pb *testing.PB) {
+   		for pb.Next() {
+   			Select()
+   		}
+   	})
+   }
+   ```
+
+5. 最终代码见[src/2-2-12bench/](../src/2-2-12bench/)
+
+6. 运行命令 `go test -bench=Ben`，查看效果。指令中`Ben`是指以`Ben`开头的测试函数都执行
+
+   ```shell
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-2-12bench> go test -bench=B
+   goos: windows
+   goarch: amd64
+   pkg: server
+   cpu: 12th Gen Intel(R) Core(TM) i5-12490F
+   BenchmarkSelect-12              71638796                15.41 ns/op
+   BenchmarkSelectParallel-12      28514331                42.61 ns/op
+   PASS
+   ok      server  2.562s
+   
+   # 只测并行
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-2-12bench> go test -bench=BenchmarkSelectP
+   goos: windows
+   goarch: amd64
+   pkg: server
+   cpu: 12th Gen Intel(R) Core(TM) i5-12490F
+   BenchmarkSelectParallel-12      27168068                43.41 ns/op
+   PASS
+   ok      server  1.399s
+   ```
+
+
+
+
+### 案例13 - 基准测试优化
+
+1. 复制[案例12](###案例12 - 基准测试) 的 `2-2-12bench` 文件夹，重命名为  `2-2-13benchOptimize`
+
+2. 在 `2-2-13bencOptimize`文件夹中执行命令， `go get "github.com/bytedance/gopkg@main"` 添加字节的gopkg
+
+   ```shell
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-2-13benchOptimize> go get "github.com/bytedance/gopkg@main"
+   go: downloading github.com/bytedance/gopkg v0.0.0-20220118071334-3db87571198b
+   go: added github.com/bytedance/gopkg v0.0.0-20220118071334-3db87571198b
+   ```
+
+3. 在文件 `server.go`中导入字节的fastrand包
+
+   ```go
+   import "github.com/bytedance/gopkg/lang/fastrand"
+   ```
+
+   这里说一下是怎么知道在路径 `gopkg/lang/fastrand`
+
+   方法一：
+
+   - 当你执行go get 命令后，你可以去 `$GOPATH/pkg/mod`找到你下载的包，然后在里面查找就能找到`fastrand`包的位置
+   - 如果你不知道你的 `$GOPATH`在哪，你可以在终端输入`go env` 确定
+
+   方法二（其实我也是用方法二的时候才确定用方法一再找一遍的）：
+
+   - 我直接看课件的实例代码 [go-project-example/benchmark/load_balance_selector.go at V0 · Moonlight-Zhao/go-project-example (github.com)](https://github.com/Moonlight-Zhao/go-project-example/blob/V0/benchmark/load_balance_selector.go)
+
+4. 修改下方的随机选择服务器代码中的随机函数为快速随机函数
+
+   ```go
+   // 原来
+   return ServerIndex[rand.Intn(10)]
+   
+   // 现在
+   return ServerIndex[fastrand.Intn(10)]
+   ```
+
+5. 与[案例12](###案例12 - 基准测试)一样进行测试
+
+   ```shell
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-2-13benchOptimize> go test -bench=B
+   goos: windows
+   goarch: amd64
+   pkg: server
+   cpu: 12th Gen Intel(R) Core(TM) i5-12490F
+   BenchmarkSelect-12              523615494                2.292 ns/op
+   BenchmarkSelectParallel-12      1000000000               0.3863 ns/op
+   PASS
+   ok      server  2.039s
+   ```
+
+6. 可以发现这比[案例12](###案例12 - 基准测试)要快很多
+
+
+
 
 
 
