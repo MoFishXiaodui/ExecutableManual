@@ -365,6 +365,154 @@ git clone -b development https://github.com/example/repo.git
 
 
 
+### 案例15 - 动手复刻社区话题页面案例
+
+此次案例代码代码量颇多，分多个章节进行。
+
+#### 初始化项目
+
+1. 新建文件夹 `2-2-15web`作为项目的**根目录**（本案例中说的根目录都是指这个文件夹下）
+2. 在 `2-2-15web`目录下执行`go mod init web`
+
+#### 构建data和repository层
+
+说明
+
+- data 存放数据本身
+- repository 放直接操作data数据的代码，形成模型(model)供上层业务调用
+
+1. 在项目根目录新建文件夹 data 和 repository
+
+2. 在data里面新建文件topic，写入如下数据（单独每一行作json数据），但并非整个文件作为json文件
+
+   ```json
+   {"id":1, "title":"青训营来啦1", "content":"冲冲冲！", "create_time":"20230804150505"}
+   {"id":2, "title":"青训营来啦2", "content":"冲冲冲！", "create_time":"20230804150506"}
+   {"id":3, "title":"青训营来啦3", "content":"冲冲冲！", "create_time":"20230804150605"}
+   {"id":4, "title":"青训营来啦4", "content":"冲冲冲！", "create_time":"20230804150705"}
+   ```
+
+3. 在repository文件夹下新建文件topic.go，这里存放操作topic数据的代码
+
+   1. 在topic.go内部写入代码如下
+
+   2. ```go
+      // 注意包名是repository
+      package repository
+      
+      // 1-先声明一个结构体，json导出和 data/topic 的内容 对应上
+      type Topic struct {
+      	Id         int64  `json:"id"`
+      	Title      string `json:"title"`
+      	Content    string `json:"content"`
+      	CreateTime string `json:"create_time"`
+      }
+      
+      // 2-创建索引表。可以快速通过Id值找到对应的Topic
+      var topicIndexMap map[int64]*Topic
+      
+      // 3-InitTopicIndexMap 初始化话题索引
+      // 如果要规范的话，后面要设置成不可导出（即小写字母开头，但是为了方便测试，先用着大写字母开头）
+      func InitTopicIndexMap(filePath string) error {
+      	// 尝试打开文件
+      	file, err := os.Open(filePath + "topic")
+      	if err != nil {
+      		return err
+      	}
+      
+      	scanner := bufio.NewScanner(file)
+      	// 为临时topic索引分配空间
+      	topicTmpMap := make(map[int64]*Topic)
+      
+      	fmt.Println("开始读取数据")
+      
+      	// 读取文本
+      	for scanner.Scan() {
+      		text := scanner.Text()
+      		fmt.Println(text)
+      
+      		// 新建单个Topic结构
+      		var topic Topic
+      
+      		// 转换text填充数据到topic上
+      		if err := json.Unmarshal([]byte(text), &topic); err != nil {
+      			return err
+      		}
+      
+      		// 把topic指针添加到临时索引表上
+      		topicTmpMap[topic.Id] = &topic
+      	}
+      	// 把 临时索引表 赋给 最终的索引表
+      	topicIndexMap = topicTmpMap
+      
+      	return nil
+      }
+      ```
+
+4. 为了能够测试上面代码的正确性，提供一下两个方法进行判断，建议先用方法一，后面再用方法二。因为方法二不能看到读取文件的过程。
+
+   1. 方法1
+
+      1. 在根目录新建test文件夹，再在内新建testRepositoryTopic.go文件
+
+      2. 写入代码如下
+
+         ```go
+         package main
+         
+         import (
+         	"fmt"
+             
+             // 这个web来自于go mod init时写的模块名，repository就是根目录下的repository包
+         	"web/repository"
+         )
+         
+         func main() {
+         	err := repository.InitTopicIndexMap("../data/")
+         	fmt.Println("err", err)
+         }
+         ```
+
+      3. 然后直接运行，会逐行输出读取的内容，说明写成功了
+
+         ```shell
+         (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-2-15web\test> go run .\testRepositoryTopic.go
+         开始读取数据
+         {"id":1, "title":"青训营来啦1", "content":"冲冲冲！", "create_time":"20230804150505"}
+         {"id":2, "title":"青训营来啦2", "content":"冲冲冲！", "create_time":"20230804150506"}
+         {"id":3, "title":"青训营来啦3", "content":"冲冲冲！", "create_time":"20230804150605"}
+         {"id":4, "title":"青训营来啦4", "content":"冲冲冲！", "create_time":"20230804150705"}
+         err <nil>
+         ```
+
+   2. 方法二
+
+      1. 在根目录执行 `go get "github.com/stretchr/testify/assert"`添加包
+
+      2. 在repository文件夹下新建topic_test.go文件，写入以下代码
+
+         ```go
+         package repository
+         
+         import (
+         	"testing"
+         
+         	"github.com/stretchr/testify/assert"
+         )
+         
+         func TestInitTopicIndexMap(t *testing.T) {
+         	var expect error = nil
+         	output := InitTopicIndexMap("../data/")
+         	assert.Equal(t, expect, output)
+         }
+         ```
+
+      3. 在根目录下执行 ` go test .\repository\`可以看到测试结果。
+
+5. 有关topic的repository层到此就做完了
+
+
+
 
 
 
