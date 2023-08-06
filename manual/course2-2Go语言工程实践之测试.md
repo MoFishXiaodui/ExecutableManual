@@ -776,3 +776,88 @@ git clone -b development https://github.com/example/repo.git
 
    
 
+#### 提供Web服务
+
+- 参考gin文档[文档 | Gin Web Framework (gin-gonic.com)](https://gin-gonic.com/zh-cn/docs/)
+
+我们本次实验使用gin框架来提供web服务。
+
+1. 在根目录新建 `server.go` 文件，然后去看上面的Gin框架文档的入门指南
+
+2. 在根目录执行安装命令 `go get -u github.com/gin-gonic/gin`
+
+3. 把Gin快速案例代码copy到 `server.go` 上面，然后直接运行
+
+   ```go
+   package main
+   
+   import "github.com/gin-gonic/gin"
+   
+   func main() {
+   	r := gin.Default()
+   	// 路由器url - ping
+   	r.GET("/ping", func(c *gin.Context) {
+   		// - 200 是请求成功状态码，问就是规定200是成功，404是page not found
+   		// - type gin.H map[string]any
+   		// c.JSON 快速使用map或者struct返回json数据
+   		// c.JSON serializes the given struct as JSON into the response body.
+            // It also sets the Content-Type as "application/json".
+   		c.JSON(200, gin.H{
+   			"message": "pong",
+   		})
+   	})
+   	r.Run() // 监听并在 0.0.0.0:8080 上启动服务
+   }
+   ```
+
+4. 导入repository包，书写数据初始化的代码
+
+   ```go
+   import "web/repository"
+   
+   func main() {
+   	err := repository.InitTopicIndexMap("./data/")
+   	if err != nil {
+   		fmt.Println("初始化数据出错")
+   		os.Exit(-1)
+   	}
+       /* ... */
+   }
+   ```
+
+5. 导入controller包，仿照第一个r.GET代码，书写自己逻辑代码
+
+   ```go
+   r.GET("/topic/:id", func(c *gin.Context) {
+       // 获取id参数
+       topicId := c.Param("id")
+       // 通过controller层的QueryPageInfo函数找Topic相关数据
+       data := controller.QueryPageInfo(topicId)
+       // 直接把数据返回
+       c.JSON(200, data)
+   })
+   // r.Run() // 默认监听并在 0.0.0.0:8080 上启动服务
+   r.Run(":9000") // 指定在9000端口上 启动服务
+   ```
+
+6. 直接运行进行测试
+
+7. 在浏览器依次测试以下链接
+
+   - http://localhost:9000
+   - http://localhost:9000/ping
+   - http://localhost:9000/topic/2
+   - http://localhost:9000/topic/5
+
+到此，有关topic内容的查询服务 从底部到web服务 都搭建好了。
+
+接下来完善有关post内容的查询服务
+
+预告
+
+#### 技能已讲解，可以参考老师代码自主完善post内容作为练习了
+
+
+
+#### 技能已学成，可以搭建web服务给你的hxd提供web问候了
+
