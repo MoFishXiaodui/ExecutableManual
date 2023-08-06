@@ -511,13 +511,168 @@ git clone -b development https://github.com/example/repo.git
 
 5. 有关topic的repository层到此就做完了
 
+#### 构建service层
 
+先看我画的这张草图，了解我们的service层是怎样与联系controller层和repository层的
 
+![image-20230806112408003](course2-2Go语言工程实践之测试.assets/image-20230806112408003.png)
 
+看完这个，可以直接开始看代码
 
+1. 在根目录下新建service文件夹，再在内新建文件 `query_page_info.go`
 
+2. 在文件 `query_page_info.go`，该文件包名为service，然后导入包`import "web/repository"
 
+3. 写入以下代码
 
+  ```go
+  package service
+  
+  import (
+      "errors"
+      "sync"
+      "web/repository"
+  )
+  
+  // PageInfo是最终要返回给上层(controller)函数的实体
+  type PageInfo struct {
+      Topic *repository.Topic
+  }
+  
+  // 处理请求内容和生成数据的结构体
+  type QueryPageInfoFlow struct {
+      // 接收上层传来的topicId
+      topicId int64
+  
+      // 组装的PageInfo实体，用来返回给上层
+      pageInfo *PageInfo
+  
+      // 下面是获取散装的模型数据
+      topic *repository.Topic // topic
+      // 以后再添加 post 模型
+  }
+  
+  // 用来检查参数的函数
+  func (f *QueryPageInfoFlow) checkParam() error {
+      if f.topicId <= 0 {
+          return errors.New("topic id must be larger than 0")
+      }
+      return nil
+  }
+  
+  // 用来通过底层模型获取对应数据的函数
+  func (f *QueryPageInfoFlow) prepareInfo() error {
+      var wg sync.WaitGroup
+      wg.Add(1)
+  
+      // 获取topic信息
+      go func() {
+          defer wg.Done()
+          topic := repository.NewTopicDaoInstance().QueryTopicById(f.topicId)
+          f.topic = topic
+      }()
+  
+      // 获取post信息先不写
+      wg.Wait()
+      return nil
+  }
+  
+  // 用来组装成PageInfo实体的函数
+  func (f *QueryPageInfoFlow) preparePageInfo() error {
+      f.pageInfo = &PageInfo{
+          Topic: f.topic,
+      }
+      return nil
+  }
+  
+  // 外部来了一个请求，我们创建一个新的QueryPageInfoFlow结构来处理，这个结构的Do()方法最终返回想要的结果
+  func QueryPageInfo(topicId int64) (*PageInfo, error) {
+      return NewQueryPageInfoFlow(topicId).Do()
+  }
+  
+  // 创建新QueryPageInfoFlow实例的函数
+  func NewQueryPageInfoFlow(topicId int64) *QueryPageInfoFlow {
+      return &QueryPageInfoFlow{
+          topicId: topicId,
+      }
+  }
+  
+  // Do函数封装了检查参数、获取数据、组装实体三个步骤，并返回PageInfo
+  func (f *QueryPageInfoFlow) Do() (*PageInfo, error) {
+      if err := f.checkParam(); err != nil {
+          return nil, err
+      }
+      if err := f.prepareInfo(); err != nil {
+          return nil, err
+      }
+      if err := f.preparePageInfo(); err != nil {
+          return nil, err
+      }
+      return f.pageInfo, nil
+  }
+  ```
+
+4. 在service文件夹下新建一个测试文件`query_page_info_test.go`，在内写入文件：
+
+  ```go
+  package service
+  
+  import (
+  	"github.com/stretchr/testify/assert"
+  
+  	"os"
+  	"testing"
+  	"web/repository"
+  )
+  
+  func TestMain(m *testing.M) {
+  	repository.InitTopicIndexMap("../data/")
+  	os.Exit(m.Run())
+  }
+  
+  func TestQueryPageInfo(t *testing.T) {
+  	pageInfo, _ := QueryPageInfo(1)
+  	assert.Equal(
+  		t,
+  		PageInfo{Topic: &repository.Topic{Content: "冲冲冲！"}}.Topic.Content,
+  		pageInfo.Topic.Content,
+  	)
+  }
+  ```
+
+5. 在根目录执行命令 `go test service`进行测试，然后把`冲冲冲`换成`冲冲冲！`（中文感叹号）再测试一次
+
+  ```shell
+  # 冲冲冲
+  (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-2-15web> go test .\service\
+  开始读取数据
+  {"id":1, "title":"青训营来啦1", "content":"冲冲冲！", "create_time":"20230804150505"}
+  {"id":2, "title":"青训营来啦2", "content":"冲冲冲！", "create_time":"20230804150506"}
+  {"id":3, "title":"青训营来啦3", "content":"冲冲冲！", "create_time":"20230804150605"}
+  {"id":4, "title":"青训营来啦4", "content":"冲冲冲！", "create_time":"20230804150705"}
+  --- FAIL: TestQueryPageInfo (0.00s)
+      query_page_info_test.go:18: 
+                  Error Trace:    D:/code/MoFishXiaodui/ExecutableManual/src/2-2-15web/service/query_page_info_test.go:18
+                  Error:          Not equal:
+                                  expected: "冲冲冲"
+                                  actual  : "冲冲冲！"
+  
+                                  --- Expected
+                                  +++ Actual
+                                  @@ -1 +1 @@
+                                  -冲冲冲
+                                  +冲冲冲！
+                  Test:           TestQueryPageInfo
+  FAIL
+  FAIL    web/service     0.219s
+  FAIL
+  
+  # 冲冲冲！
+  (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-2-15web> go test .\service\
+  ok      web/service     (cached)
+  
+  # 测试成功
+  ```
 
 
 
