@@ -674,5 +674,105 @@ git clone -b development https://github.com/example/repo.git
   # 测试成功
   ```
 
+#### 构建controller层
 
+本层代码提供最后一层的封装控制。本次案例涉及逻辑不多，此次controller层仅是封装一个 通过string类型的topicId获取topic 的函数，逻辑不复杂。读者认真完成service层为关键。
+
+1. 在根目录新建controller文件夹，再在内新建`query_page_info.go` 文件（与service层的文件同名，你若改成其他文件名当然也是可以的）。
+
+2. 在`query_page_info.go`内书写以下代码
+
+   ```go
+   package controller
+   
+   import (
+   	"strconv"
+   	"web/service"
+   )
+   
+   type PageData struct {
+   	Code int64       `json:"code"` // 状态码
+   	Msg  string      `json:"msg"`  // 成功/错误信息
+   	Data interface{} `json:"data"` // 数据
+   }
+   
+   func QueryPageInfo(topicIdStr string) *PageData {
+   	// 将string类型的topicIdStr转换为int64类型的topicId
+   	topicId, err := strconv.ParseInt(topicIdStr, 10, 64)
+   	if err != nil {
+   		return &PageData{
+   			Code: -1,
+   			Msg:  err.Error(),
+   		}
+   	}
+   	pageInfo, err := service.QueryPageInfo(topicId)
+   	if err != nil {
+   		return &PageData{
+   			Code: -1,
+   			Msg:  err.Error(),
+   		}
+   	}
+   	return &PageData{
+   		Code: 0,
+   		Msg:  "success",
+   		Data: pageInfo,
+   	}
+   }
+   ```
+
+3. 新建测试文件 `query_page_info_test.go`中书写以下代码
+
+   ```go
+   package controller
+   
+   import (
+   	"github.com/stretchr/testify/assert"
+   
+   	"os"
+   	"testing"
+   	"web/repository"
+   )
+   
+   func TestMain(m *testing.M) {
+   	repository.InitTopicIndexMap("../data/")
+   	os.Exit(m.Run())
+   }
+   
+   func TestQueryPageInfo(t *testing.T) {
+   	pageData := QueryPageInfo("1")
+   	assert.Equal(
+   		t,
+   		int64(0),
+   		pageData.Code,
+   	)
+   }
+   ```
+
+4. 测试方法不再赘述。在TestQueryPageInfo中可以修改 int64() 内的值进行测试
+
+   ```shell
+   # int64(0)
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-2-15web> go test .\controller\
+   ok      web/controller  0.224s
+   
+   # int64(-1)
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\2-2-15web> go test .\controller\
+   开始读取数据
+   {"id":1, "title":"青训营来啦1", "content":"冲冲冲！", "create_time":"20230804150505"}
+   {"id":2, "title":"青训营来啦2", "content":"冲冲冲！", "create_time":"20230804150506"}
+   {"id":3, "title":"青训营来啦3", "content":"冲冲冲！", "create_time":"20230804150605"}
+   {"id":4, "title":"青训营来啦4", "content":"冲冲冲！", "create_time":"20230804150705"}
+   --- FAIL: TestQueryPageInfo (0.00s)
+       query_page_info_test.go:18:
+                   Error Trace:    D:/code/MoFishXiaodui/ExecutableManual/src/2-2-15web/controller/query_page_info_test.go:18
+                   Error:          Not equal:
+                                   expected: -1
+                                   actual  : 0
+                   Test:           TestQueryPageInfo
+   FAIL
+   FAIL    web/controller  0.214s
+   FAIL
+   ```
+
+   
 
