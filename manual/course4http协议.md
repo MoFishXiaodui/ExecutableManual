@@ -78,6 +78,41 @@
 
 ### 案例4-3发送post报文
 
+1. 复制案例4-1的文件夹，改名为4-3postGin
+
+2. 在main.go中新增一个post请求的处理方法
+
+   ```go
+   r.POST("/sis", func(c *gin.Context) {
+       c.Data(200, "text/plain; charset=utf-8", []byte("ok"))
+   })
+   ```
+
+3. 直接运行
+
+4. cmd执行`telnet localhost 8080`进入会话框，关闭回显，发送报文如下
+
+   ```http
+   POST /sis HTTP/1.1
+   host: 127.0.0.1
+   ```
+
+5. 测试结果
+
+   ```shell
+   POST /sis HTTP/1.1	# 请求行
+   host: 127.0.0.1		# 请求头部 host
+   
+   HTTP/1.1 200 OK		# 响应行
+   Content-Type: text/plain; charset=utf-8	# 响应头部 内容/文件类型
+   Date: Fri, 11 Aug 2023 04:02:53 GMT		# 响应头部 响应时间
+   Content-Length: 2						# 响应头部 主体长度
+   
+   ok		# 响应主体
+   ```
+
+   
+
 
 
 
@@ -101,6 +136,11 @@
    > Microsoft Telnet>
 
 
+
+## HTTP 请求头
+
+- 标准文档 [RFC 9110: HTTP Semantics (rfc-editor.org)](https://www.rfc-editor.org/rfc/rfc9110)
+- MDN文档 [HTTP 标头（header） - HTTP | MDN (mozilla.org)](https://developer.mozilla.org/zh-CN/docs/web/http/headers)
 
 
 
