@@ -132,6 +132,144 @@
 10. ![image-20230811151208957](course4http协议.assets/image-20230811151208957.png)
 11. 如图填写，点击发送，查看响应即可
 
+### **HTTP分层设计**
+
+为了方便后续学习理解，请认真阅读下面两张图片
+
+![http分层设计1](course4http协议.assets/http分层设计1.png)
+
+![http分层设计2](course4http协议.assets/http分层设计2.png)
+
+
+
+### 案例4-5中间件之不是中间件版
+
+此次案例将在gin返回给客户端数据的前后在控制台打印相关的提示信息，模拟前置和后置操作
+
+1. 复制案例4-3文件夹，命名为4-5preAndPost。或者你也可以重新建一个gin项目，并不复杂。
+
+2. main中的代码改为：
+
+   ```go
+   r := gin.Default()
+   
+   r.POST("/login", func(c *gin.Context) {
+       //	前置处理
+       fmt.Println("login request")
+   
+       c.Data(200, "text/plain; charset=utf-8", []byte("login"))
+   
+       //	后置处理
+       fmt.Println("login sucess")
+   })
+   
+   r.POST("/logout", func(c *gin.Context) {
+       //	前置处理
+       fmt.Println("logout request")
+   
+       c.Data(200, "text/plain; charset=utf-8", []byte("logout"))
+   
+       //	后置处理
+       fmt.Println("logout success")
+   })
+   
+   r.Run() // 监听并在 0.0.0.0:8080 上启动服务
+   ```
+
+3. 直接运行
+
+4. 然后在postman分别进行post测试
+
+   - http://localhost:8080/login
+   - http://localhost:8080/logout
+
+5. 可以看到控制台有以下输出
+
+   ```shell
+   [GIN-debug] Environment variable PORT is undefined. Using port :8080 by default
+   [GIN-debug] Listening and serving HTTP on :8080
+   login request
+   login sucess
+   [GIN] 2023/08/11 - 16:33:06 | 200 |      1.0411ms |             ::1 | POST     "/login"
+   logout request
+   logout success
+   [GIN] 2023/08/11 - 16:33:09 | 200 |       488.1µs |             ::1 | POST     "/logout"
+   ```
+
+
+
+### 案例4-6中间件
+
+案例4-5中处理两个请求时，前置和后置操作都是一样的，我们可以把这写操作剥离出来，用中间件的方式替换
+
+1. 复制案例4-5文件夹，重命名为 `4-6middleware`
+
+2. 修改 main.go 代码为
+
+   ```go
+   r := gin.Default()
+   
+   // 使用中间件
+   r.Use(func(c *gin.Context) {
+       fmt.Println("middleware start", c.Request.URL)
+       c.Next()
+       fmt.Println("middleware over")
+   })
+   
+   r.POST("/login", func(c *gin.Context) {
+       fmt.Println("在login处理函数")
+       c.Data(200, "text/plain; charset=utf-8", []byte("login"))
+   })
+   
+   r.POST("/logout", func(c *gin.Context) {
+       fmt.Println("在logout处理函数")
+       c.Data(200, "text/plain; charset=utf-8", []byte("logout"))
+   })
+   
+   r.Run() // 监听并在 0.0.0.0:8080 上启动服务
+   ```
+
+3. postman发送/login和/logout请求
+
+4. 查看控制台输出
+
+   ```shell
+   (base) PS D:\code\MoFishXiaodui\ExecutableManual\src\4-6middleware> go run .
+   [GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+   Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+   [GIN-debug] Environment variable PORT is undefined. Using port :8080 by default
+   [GIN-debug] Listening and serving HTTP on :8080
+   middleware start /login
+   在login处理函数
+   middleware over
+   [GIN] 2023/08/11 - 16:52:42 | 200 |            0s |             ::1 | POST     "/login"
+   middleware start /logout
+   在logout处理函数
+   middleware over
+   [GIN] 2023/08/11 - 16:52:47 | 200 |         587µs |             ::1 | POST     "/logout"
+   ```
+
+5. 可以验证，之前的post请求处理函数 都是在中间件函数的next()函数执行时触发的
+
+6. 测试，如果把Next()函数注释，可以得到以下结果
+
+   ```shell
+   [GIN-debug] Environment variable PORT is undefined. Using port :8080 by default
+   [GIN-debug] Listening and serving HTTP on :8080
+   middleware start /login
+   middleware over
+   在login处理函数
+   [GIN] 2023/08/11 - 17:03:07 | 200 |         513µs |             ::1 | POST     "/login"
+   middleware start /logout
+   middleware over
+   在logout处理函数
+   [GIN] 2023/08/11 - 17:03:14 | 200 |       237.7µs |             ::1 | POST     "/logout"
+   ```
+
+   中间件函数会被完整执行，然后再处理后续的post请求函数。
+
+7. 了解gin框架中更多的中间件知识 [使用中间件 | Gin Web Framework (gin-gonic.com)](https://gin-gonic.com/zh-cn/docs/examples/using-middleware/)
+
 
 
 
