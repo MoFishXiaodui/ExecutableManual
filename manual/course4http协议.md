@@ -111,7 +111,28 @@
    ok		# 响应主体
    ```
 
-   
+
+
+
+### 案例4-4使用postman发送报文
+
+![image-20230811150204817](course4http协议.assets/image-20230811150204817.png)
+
+这个案例主要是体验使用postman发送请求。
+
+1. 继续使用4-3的gin服务
+2. 下载postman，地址：[Download Postman | Get Started for Free](https://www.postman.com/downloads/)
+3. 安装、注册、登录
+4. ![image-20230811150600884](course4http协议.assets/image-20230811150600884.png)
+5. 点击Collection、Create new colletion
+6. ![image-20230811150729049](course4http协议.assets/image-20230811150729049.png)
+7. 自定义改名
+8. ![image-20230811150758359](course4http协议.assets/image-20230811150758359.png)
+9. 点击 Add Request
+10. ![image-20230811151208957](course4http协议.assets/image-20230811151208957.png)
+11. 如图填写，点击发送，查看响应即可
+
+
 
 
 
