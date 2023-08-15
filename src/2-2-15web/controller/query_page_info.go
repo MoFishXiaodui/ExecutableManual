@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"strconv"
 	"web/service"
 )
@@ -26,6 +27,7 @@ func QueryPageInfo(topicIdStr string) *PageData {
 		}
 	}
 	pageInfo, err := service.QueryPageInfo(topicId)
+	log.Println("getPageInfo", topicId, pageInfo.PostList)
 	if err != nil {
 		return &PageData{
 			Code: -1,

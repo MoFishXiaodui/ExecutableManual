@@ -13,7 +13,12 @@ import (
 func main() {
 	err := repository.InitTopicIndexMap("./data/")
 	if err != nil {
-		fmt.Println("初始化数据出错")
+		fmt.Println("topic初始化数据出错")
+		os.Exit(-1)
+	}
+
+	if err := repository.InitPostIndexMap("./data/"); err != nil {
+		fmt.Println("post初始化数据出错")
 		os.Exit(-1)
 	}
 
