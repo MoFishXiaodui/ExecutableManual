@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -44,6 +45,23 @@ func main() {
 		// 直接把数据返回
 		c.JSON(200, data)
 	})
+
+	// 回复话题（插入新帖）
+	// 案例：POST http://localhost:9000/topic/1/post?content=youarewelcome
+	r.POST("/topic/:id/post", func(c *gin.Context) {
+		topicId := c.Param("id")
+		content := c.Query("content")
+		fmt.Println("/topic/id/post", topicId, content)
+
+		data := controller.InsertNewPost(topicId, content)
+		switch data.Code {
+		case 0:
+			c.JSON(200, data)
+		case -1:
+			c.JSON(http.StatusNotAcceptable, data)
+		}
+	})
+
 	// r.Run() // 默认监听并在 0.0.0.0:8080 上启动服务
 
 	r.Run(":9000") // 指定在9000端口上 启动服务
