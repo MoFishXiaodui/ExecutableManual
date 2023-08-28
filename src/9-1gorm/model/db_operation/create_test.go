@@ -1,4 +1,4 @@
-package main
+package db_operation
 
 import (
 	"gorm.io/driver/mysql"

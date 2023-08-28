@@ -280,7 +280,9 @@
 
    `import "testing"`
 
-5. 在create_test.go文件的main函数中追加：
+5. 顶部包名也修改为`db_opertaion`，和文件夹名字保持一致
+
+6. 在create_test.go文件的main函数中追加：
 
    ```go
    stu := &Stu{Name: "张三"}
@@ -290,18 +292,16 @@
    }
    ```
 
-6. 在根目录运行`go test .\db_operation\`或者点击测试函数左侧的测试按钮![image-20230828210352255](course9-1GORM框架.assets/image-20230828210352255.png)
+7. 在根目录运行`go test .\db_operation\`或者点击测试函数左侧的测试按钮![image-20230828210352255](course9-1GORM框架.assets/image-20230828210352255.png)
    进行测试。
 
-7. 测试成功判断：
+8. 测试成功判断：
 
    - 如果你是运行命令测试的，那么看到`ok      model/db_operation      1.098s`这样的输出就是成功执行了
    - 如果你是通过IDE测试按钮测试的，那么你能看到类似如图所示的输出就是成功执行了![image-20230828210803284](course9-1GORM框架.assets/image-20230828210803284.png)
 
-8. 查看数据库students表可以看到新增加了一条数据
+9. 查看数据库students表可以看到新增加了一条数据
    ![image-20230828210824291](course9-1GORM框架.assets/image-20230828210824291.png)
-
-
 
 
 
