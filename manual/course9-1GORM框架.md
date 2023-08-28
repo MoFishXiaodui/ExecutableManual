@@ -157,5 +157,112 @@
 
 18. 到此，本案例结束。最终代码可参考 [src/9-1gorm/demo1](../src/9-1gorm/demo1)
 
+### 案例 9-3 Gorm增删改查
+
+有关dsn(data source name)的介绍，大家需要浏览一下[go-sql-driver/mysql: Go MySQL Driver is a MySQL driver for Go's (golang) database/sql package (github.com)](https://github.com/go-sql-driver/mysql#dsn-data-source-name)
+
+#### 模型介绍
+
+官方文档Model介绍：[Declaring Models | GORM - The fantastic ORM library for Golang, aims to be developer friendly.](https://gorm.io/docs/models.html)
+
+强烈建议大家去浏览一遍上面官方文档Model介绍的内容，至少要把文档里的标题读一遍。
+
+模型适合数据库表一一对应的，模型是一个结构体，gorm自动以`蛇形复数`的形式转换 结构体名 为表名，将字段以`蛇形`形式转换为表的列名。
+
+>转换蛇形复数示例：SnakeCase -> snake_cases
+>
+>转换蛇形示例：SnakeCase -> snake_case
+
+当然，表名和列名都是可以自定义的
+
+- 为模型设置自定义表名，只需指定该模型的TableName()函数返回值：
+
+  ```go
+  func (p Product) TableName() string {
+      return "你想要设置的表名"
+  }
+  ```
+
+- 为字段设置自定义列名，只需要指定字段的标签。另外注意：写标签推荐用**反引号**，写双引号是可以的，但内部的引号还要进行转义，要写更多的字符还不容易读懂。用反引号就完事了。
+
+  ```go
+  type Product struct {
+      Code string `gorm:"column:你想设置的列名"`
+  }
+  ```
+
+下面我们实操一下，创建一个学生信息表，学会自定义表名和列名，并对年龄指定默认值
+
+1. 复制一下案例9-2的代码，根目录文件夹名称修改为model
+
+2. 修改go.mod文件中的module名为model，然后把main函数导入config包前面的demo换成model
+
+   ```
+   # in go.mod file
+   module model
+   
+   # in main.go file
+   import (
+   	"gorm.io/driver/mysql"
+   	"gorm.io/gorm"
+   	"model/config"
+   )
+   ```
+
+3. 删掉main.go中的Product结构体以及中main函数与Product的代码
+
+   ```go
+   package main
+   
+   import (
+   	"demo/config"
+   	"gorm.io/driver/mysql"
+   	"gorm.io/gorm"
+   )
+   
+   func main() {
+   	var addr, user, pwd, dbName string = config.GetMySQLConfig()
+   	dsn := user + ":" + pwd + "@tcp(" + addr + ")/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local"
+   	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+   
+   	if err != nil {
+   		panic("failed to connect database")
+   	}
+   }
+   ```
+
+4. 创建学生结构体 Stu（也即创建了一个Stu模型）
+
+   ```go
+   type Stu struct {
+   	Name string `gorm:"column:stu_name"`
+   	Age  uint8  `gorm:"column:age;default:18"`
+   }
+   ```
+
+5. 指定Stu模型的表名
+
+   ```go
+   func (s Stu) TableName() string {
+       return "students"
+   }
+   ```
+
+6. 在main函数中，使用`db.AutoMigrate()`方法自动生成schema(表结构)，然后我们暂时不处理错误
+
+   ```go
+   _ = db.AutoMigrate(&Stu{})
+   ```
+
+7. 执行main函数，然后到数据库中查看是否有students表以及表的列名是否符合预期。![image-20230827215409379](course9-1GORM框架.assets/image-20230827215409379.png)
+
+
+
+
+
+
+
+
+
 
 
