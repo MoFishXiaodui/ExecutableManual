@@ -256,7 +256,50 @@
 
 7. 执行main函数，然后到数据库中查看是否有students表以及表的列名是否符合预期。![image-20230827215409379](course9-1GORM框架.assets/image-20230827215409379.png)
 
+#### 增加数据
 
+1. 看文档[Create | GORM](https://gorm.io/docs/create.html)，浏览Create的用法
+
+2. 我们在model根目录创建一个新的文件夹db_operation，再在内创建一个文件create_test.go
+
+3. 把main.go的内容全部复制到create_test.go中
+
+4. 把create_test.go中的main函数改名为TestCreate，并传入参数`t *testing.T`
+
+   ```go
+   func main() {
+       
+   }
+   // 变为 ->
+   func TestCreate(t *testing.T) {
+       
+   }
+   ```
+
+   此时，IDE一般会自动在上方导入`testing`包，如果没有自动导入，则手动导入即可
+
+   `import "testing"`
+
+5. 在create_test.go文件的main函数中追加：
+
+   ```go
+   stu := &Stu{Name: "张三"}
+   res := db.Create(stu)
+   if res.Error != nil {
+       t.Errorf("sth wrong, err: %v", res.Error)
+   }
+   ```
+
+6. 在根目录运行`go test .\db_operation\`或者点击测试函数左侧的测试按钮![image-20230828210352255](course9-1GORM框架.assets/image-20230828210352255.png)
+   进行测试。
+
+7. 测试成功判断：
+
+   - 如果你是运行命令测试的，那么看到`ok      model/db_operation      1.098s`这样的输出就是成功执行了
+   - 如果你是通过IDE测试按钮测试的，那么你能看到类似如图所示的输出就是成功执行了![image-20230828210803284](course9-1GORM框架.assets/image-20230828210803284.png)
+
+8. 查看数据库students表可以看到新增加了一条数据
+   ![image-20230828210824291](course9-1GORM框架.assets/image-20230828210824291.png)
 
 
 
