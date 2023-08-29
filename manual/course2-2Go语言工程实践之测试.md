@@ -509,7 +509,39 @@ git clone -b development https://github.com/example/repo.git
 
       3. 在根目录下执行 ` go test .\repository\`可以看到测试结果。
 
-5. 有关topic的repository层到此就做完了
+5. ~~有关topic的repository层到此就做完了~~
+
+6. repository层还需要对外提供Dao实体，需要在topic.go文件添加如下代码
+
+   ```go
+   // 4-对外提供Dao模型
+   type TopicDao struct {
+   }
+   
+   // 5-设置锁
+   var (
+   	topicDao  *TopicDao
+   	topicOnce sync.Once
+   )
+   
+   // 6-定义 TopicDao 初始函数
+   func NewTopicDaoInstance() *TopicDao {
+   	// func (*sync.Once).Do(f func())
+   	// Once is an object that will perform exactly one action.
+   	// A Once must not be copied after first use.
+   	topicOnce.Do(
+   		func() {
+   			// 创建TopicDao实例并把该实例的指针赋值给全局的topicDao
+   			topicDao = &TopicDao{}
+   		})
+   	return topicDao
+   }
+   
+   // 7-定义topic查询函数
+   func (*TopicDao) QueryTopicById(id int64) *Topic {
+   	return topicIndexMap[id]
+   }
+   ```
 
 #### 构建service层
 
