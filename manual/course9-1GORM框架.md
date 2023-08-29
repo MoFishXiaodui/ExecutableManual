@@ -3,6 +3,9 @@
 本文需要如下基础：
 
 - 熟悉数据库的增删改查操作
+  - 推荐教程：[SQL的核心基础语法 | 快速入门MySQL_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV16D4y167TT)
+  - 获取免费云数据库在下文 `#环境准备` 章节有提及
+
 - 熟悉go语言基本语法，了解go依赖管理
 - 了解go语言基本的测试方法
 
@@ -522,6 +525,69 @@
     ```
 
     在数据库里面数据也成功被修改成26
+
+#### 删除数据
+
+1. 参考文档[Delete | GORM](https://gorm.io/docs/delete.html)
+
+2. 正如官方所描述的那样`When deleting a record, the deleted value needs to have primary key or it will trigger a Batch Delete`，如果只想删除一条数据，那么使用删除的时候应当注意带上主键，否则会触发批量删除
+
+3. 准备一些数据，你可以使用`TestCreate`函数创建多几个，也可以执行下方的SQL语句
+
+   ```mysql
+   insert into students  (stu_name, age) values ("张三", 18);
+   insert into students  (stu_name, age) values ("李四", 29);
+   insert into students  (stu_name, age) values ("王五", 9);
+   insert into students  (stu_name, age) values ("吕布", 17);
+   insert into students  (stu_name, age) values ("赤兔", 8);
+   ```
+
+4. 建立与`update_test.go`的同级文件`delete_test.go`，写入代码如下：
+
+   ```go
+   // 无效删除
+   func TestDelete(t *testing.T) {
+   	stu := &Stu{Name: "赤兔"}
+   	db.Delete(stu)
+   }
+   
+   // 无效删除
+   func TestDelete2(t *testing.T) {
+   	stu := &Stu{Name: "赤兔"}
+   	db.Unscoped().Delete(stu)
+   }
+   
+   // 有效删除
+   func TestDelete3(t *testing.T) {
+   	stu := &Stu{}
+   	db.Where("stu_name = ?", "赤兔").Delete(stu)
+   }
+   ```
+
+5. 运行上述`TestDelete`和`TestDelete2`函数后，并不会把"赤兔"从数据库中删除，只有`TestDelete3`成功了。
+
+6. 然后你可以往数据库中插入多条"赤兔"的数据，只需执行一次`TestDelete3`就可以全部删除，说明在不指定主键的情况下，确实是执行批量删除操作
+
+7. 如果想只删除一条数据，就需要指定主键
+
+   ```go
+   // 有效删除一条数据
+   func TestDelete4(t *testing.T) {
+   	stu := &Stu{}
+   	db.First(stu, "stu_name = ?", "赤兔").Delete(stu)	
+       // First会找到第一条符合条件的数据，并在stu结构体中指定主键，所以在执行Delete操作时，可以确认删除的具体行
+   }
+   ```
+
+#### 软删除
+
+软删除：通过对数据行添加一个删除标志来表示数据被删除，但是数据并不是真的被删除了。
+
+官方对软删除的解释：
+
+>If your model includes a `gorm.DeletedAt` field (which is included in `gorm.Model`), it will get soft delete ability automatically!
+>
+>When calling `Delete`, the record WON’T be removed from the database, but GORM will set the `DeletedAt`‘s value to the current time, and the data is not findable with normal Query methods anymore.
 
 
 
