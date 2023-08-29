@@ -4,6 +4,7 @@
 
 - 熟悉数据库的增删改查操作
 - 熟悉go语言基本语法，了解go依赖管理
+- 了解go语言基本的测试方法
 
 参考资料汇总：
 
@@ -302,6 +303,53 @@
 
 9. 查看数据库students表可以看到新增加了一条数据
    ![image-20230828210824291](course9-1GORM框架.assets/image-20230828210824291.png)
+
+#### 查询数据
+
+现在我们需要通过go语言
+
+1. 看文档[Query | GORM](https://gorm.io/docs/query.html)，了解gorm查询数据库的方法，有很多方法和注意事项本教程不会演示，需要读者自行学习
+
+2. 自己修改TestCreate()函数并执行，往数据库中插入一行 名为`李四`，年龄为`23`的数据，用于等一下查询
+
+3. 创建`create_test.go`同级文件`query_test.go`，往里面写入：
+
+   ```go
+   package db_operation
+   
+   import (
+   	"gorm.io/driver/mysql"
+   	"gorm.io/gorm"
+   	"model/config"
+   	"testing"
+   )
+   
+   func TestFirst(t *testing.T) {
+       /*前面和TestCreate函数一致*/
+   
+   	stu := &Stu{}
+   	res := db.First(stu, "stu_name = ?", "李四") // "李四"会自动替换前面的问号，作为First查询的条件
+   	if res.Error != nil {
+   		t.Errorf("sth wrong, err: %v", res.Error)
+   	}
+   	if stu.Age != 23 {
+   		t.Errorf("李四应该是23岁，而拿到的数据库数据却是：%v", stu.Age)
+   	}
+   }
+   
+   ```
+
+4. 上面的First用法在文档的位置：![image-20230828220542368](course9-1GORM框架.assets/image-20230828220542368.png)
+
+5. 测试：如果你通过IDE的测试按钮测试的话，和增加数据时的方式一致；如果你执行命令的话，在命令后面加`-run`选项，然后指定要测试的函数名，即`go test ./db_operation -run TestFirst`
+
+6. 为了测试确实可以判断错误，读者可自行把李四的判断年龄设成非23的值，再重新测试
+
+
+
+#### 
+
+
 
 
 
