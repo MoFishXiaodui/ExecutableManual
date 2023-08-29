@@ -7,6 +7,7 @@ import (
 )
 
 type Stu struct {
+	ID   uint64 `gorm:"primaryKey"`
 	Name string `gorm:"column:stu_name"`
 	Age  uint8  `gorm:"column:age;default:18"`
 }

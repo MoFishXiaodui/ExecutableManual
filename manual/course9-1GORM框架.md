@@ -210,7 +210,7 @@
    )
    ```
 
-3. 删掉main.go中的Product结构体以及中main函数与Product的代码
+3. 删掉main.go中的Product结构体以及中main函数与Product有关的代码
 
    ```go
    package main
@@ -435,15 +435,93 @@
    - 方式1：根目录执行 `go test ./db_operation -run TestXxx`
    - 方式2：IDE界面点击测试函数隔壁的测试执行按钮
 
+#### 修改数据
 
+先往数据库students表里面塞入一行数据`stu_name`=''克罗地亚''，`age`=25，等会以这条数据演示修改
 
+1. 阅读文档[Update | GORM](https://gorm.io/docs/update.html)，了解Update的基本用法，本文只演示一种方法，剩下的要读者自行了解。
 
+2. 先分析文档给出的操作：
 
-#### 
+   ```go
+   db.First(&user)
+   
+   user.Name = "jinzhu 2"
+   user.Age = 100
+   db.Save(&user)
+   // UPDATE users SET name='jinzhu 2', age=100, birthday='2016-01-01', updated_at = '2013-11-17 21:34:10' WHERE id=111;
+   ```
 
+   逻辑：先找到这一行，然后对这一行修改数据，然后保存
 
+3. 看懂逻辑之后，创建一个与`create_test.go`同级的文件`update_test.go`，写入
 
+   ```go
+   package db_operation
+   
+   import "testing"
+   
+   func TestUpdate(t *testing.T) {
+   	stu := &Stu{}
+   	db.First(stu, "stu_name = ?", "克罗地亚")
+   	ageBefore := stu.Age
+   	stu.Age++
+   	db.Save(stu)
+   
+   	newStu := &Stu{}
+   	db.First(newstu, "stu_name = ?", "克罗地亚")
+   	if ageBefore+1 != newStu.Age {
+   		t.Errorf("克罗地亚的年龄应该是: %v， 而实测结果是: %v\n", ageBefore+1, newStu.Age)
+   	}
+   }
+   ```
 
+4. 测试执行，会发现失败了，输出如下内容
+
+   ```shell
+   === RUN   TestUpdate
+   
+   2023/08/29 14:26:01 D:/code/MoFishXiaodui/ExecutableManual/src/9-1gorm/model/db_operation/update_test.go:12 WHERE conditions required
+   [77.478ms] [rows:0] UPDATE `students` SET `stu_name`='克罗地亚',`age`=26
+       update_test.go:17: 克罗地亚的年龄应该是: 26， 而实测结果是: 25
+                    --- FAIL: TestUpdate (0.24s)
+   
+   FAIL
+   ```
+
+5. 到数据库查看表也会发现没有改变内容。
+
+6. 这个原因是因为在执行db.Save(stu)的时候，并没有指定是哪一行（因为没有携带主键信息），MySQL并不知道更新哪一行，也就无法更新
+
+7. 所以现在，我们需要修改model，使其具有主键，这样每次操作都带有一个唯一的主键，MySQL就知道如何更新啦。
+
+8. 打开`db_init.go`文件，在Stu结构体中新增一个ID字段，并指定gorm标签为`primaryKey`。
+
+   ```go
+   type Stu struct {
+   	ID   uint64 `gorm:"primaryKey"`
+   	Name string `gorm:"column:stu_name"`
+   	Age  uint8  `gorm:"column:age;default:18"`
+   }
+   ```
+
+   有关gorm标签的更多说明参考 [Declaring Models | GORM](https://gorm.io/docs/models.html)下方的`Fields Tags`表
+
+9. 这个时候我们可以在数据表中新建列，列名为id，设为主键。或者把数据库的students删除了，利用go代码重新建立schema，由于DBinit函数中的`_ = dbTemp.AutoMigrate(&Stu{})`自动修改数据库schema，所以我们这个时候测试`TestCreate`等任何会执行`AutoMigrate()`操作函数的时候将自动在数据库生成对应表格。
+
+10. 往表格里写入`stu_name`=''克罗地亚''，`age`=25
+
+11. 重新测试TestUpdate()，成功
+
+    ```go
+    === RUN   TestUpdate
+    --- PASS: TestUpdate (0.31s)
+    PASS
+    
+    Process finished with the exit code 
+    ```
+
+    在数据库里面数据也成功被修改成26
 
 
 
