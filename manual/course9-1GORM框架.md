@@ -345,6 +345,98 @@
 
 6. 为了测试确实可以判断错误，读者可自行把李四的判断年龄设成非23的值，再重新测试
 
+#### 合并代码
+
+在增加数据和查询数据的函数中，我们发现两个TestXXX()函数内容有很多重复的，我们可以把重复的测试代码合并到一个函数A上，然后在TestMain()函数中调用这个函数A，这样每次测试初始化的时候都会自动执行这部分相同的代码。
+
+1. 新建两个与`query_test.go`同级的文件，分别命名为 `db_init.go`和`db_init_test.go`
+
+2. 把`create_test.go`中的模型代码剪切放到`db_init.go`中
+
+   ```go
+   type Stu struct {
+   	Name string `gorm:"column:stu_name"`
+   	Age  uint8  `gorm:"column:age;default:18"`
+   }
+   
+   func (s Stu) TableName() string {
+   	return "students"
+   }
+   ```
+
+3. 在`create_test.go`新建一个db_operation包的全局变量db
+
+   ```go
+   var db *gorm.DB
+   ```
+
+   IDE自动导入包`import "gorm.io/gorm"`
+
+4. 在`create_test.go`中新建一个函数`DBinit`
+
+5. 把`TestCreate`函数中的连接数据库和迁移表格的代码剪切到db_init.go的`DBinit`函数中。IDE自动导包后，代码最终呈现：
+
+   ```go
+   package db_operation
+   
+   import (
+   	"gorm.io/driver/mysql"
+   	"gorm.io/gorm"
+   	"model/config"
+   )
+   
+   type Stu struct {
+   	Name string `gorm:"column:stu_name"`
+   	Age  uint8  `gorm:"column:age;default:18"`
+   }
+   
+   func (s Stu) TableName() string {
+   	return "students"
+   }
+   
+   var db *gorm.DB
+   
+   func DBinit() {
+   	var addr, user, pwd, dbName string = config.GetMySQLConfig()
+   	dsn := user + ":" + pwd + "@tcp(" + addr + ")/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local"
+   	dbTemp, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+   
+   	if err != nil {
+   		panic("failed to connect database")
+   	}
+   
+   	// Migrate the schema
+   	_ = dbTemp.AutoMigrate(&Stu{})
+   
+   	db = dbTemp
+   }
+   ```
+
+6. 在`db_init_test.go`文件中写入如下代码：
+
+   ```go
+   package db_operation
+   
+   import "testing"
+   
+   func TestMain(m *testing.M) {
+   	DBinit()
+   	m.Run()
+   }
+   ```
+
+   - 注意点1：TestMain函数的参数类型是 `*testing.M`，而不是`*testing.T`
+   - 注意点2：TestMain函数中需要执行`m.Run()`才有效👀
+
+7. 删去`TestCreate`函数的冗余代码
+
+8. 测试方式和前面提到的一致
+
+   - 方式1：根目录执行 `go test ./db_operation -run TestXxx`
+   - 方式2：IDE界面点击测试函数隔壁的测试执行按钮
+
+
+
 
 
 #### 
